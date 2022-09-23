@@ -75,7 +75,7 @@ GROUP BY location_id
 ORDER BY 'max of dep' desc;
 
 
-----Solving Exercise------------------------------
+----Solving Exercise-----
 SELECT *
 FROM employees;
 
@@ -129,7 +129,7 @@ SELECT COUNT (employee_id)
 FROM employees
 WHERE commission_pct IS NOT NULL;
 
----7.)  Issue a query to count the number of employeesí first name column. The result should be just one row.---
+---7.)  Issue a query to count the number of employees‚Äô first name column. The result should be just one row.---
 SELECT COUNT (first_name)
 FROM employees;
 
@@ -187,7 +187,7 @@ WHERE first_name = 'Martha' AND last_name = 'Sullivan') AND salary > (SELECT sal
  FROM employees
 WHERE first_name = 'TJ' AND last_name = 'Olson');
 
----11.) Display all the departments that exist in the departments table that are not in the employeesí table. Do not use a where clause.----
+---11.) Display all the departments that exist in the departments table that are not in the employees‚Äô table. Do not use a where clause.----
 ---use a joining clause
 SELECT * FROM employees;
 SELECT * FROM departments;
@@ -231,7 +231,7 @@ EXCEPT
 SELECT DISTINCT department_id FROM employees ----
 
 
----12.) Display all the departments that exist in department tables that are also in the employeesí table. Do not use a where clause.----
+---12.) Display all the departments that exist in department tables that are also in the employees‚Äô table. Do not use a where clause.----
 SELECT * FROM employees;
 SELECT * FROM departments;
 
@@ -320,7 +320,7 @@ WHERE department_id IN (SELECT department_id FROM departments WHERE department_n
 AND salary > 3100.00;
 
 
----18.) Write an SQL query to print the first three characters of FIRST_NAME from employeeís table.---
+---18.) Write an SQL query to print the first three characters of FIRST_NAME from employee‚Äôs table.---
 SELECT SUBSTRING (first_name, 1, 3)
 FROM employees;
 
@@ -401,15 +401,37 @@ FROM employees
 WHERE salary > 11000.00;
 
 
----25.) Create a query that displays the employeesí last names and commission amounts. If an employee does not earn commission, put ìno commissionî. Label the column COMM. 
+SELECT employee_id, salary FROM employees
+WHERE salary >(SELECT salary FROM employees
+WHERE last_name = 'Abel')
+
+---25.) Create a query that displays the employees‚Äô last names and commission amounts. If an employee does not earn commission, put ‚Äúno commission‚Äù. Label the column COMM. 
 SELECT * FROM departments;
 SELECT * FROM employees;
 
-SELECT last_name, NVL2 (commission_pct, TO CHAR(commission_pct)'no commission') "COMM"
+SELECT last_name, commission_pct, 'no commission' AS COMM ----71 rows
+FROM employees
+WHERE commission_pct IS NULL
+UNION
+SELECT last_name, commission_pct, CAST(commission_pct AS VARCHAR) AS COMM ----35 rows
+FROM employees
+WHERE commission_pct IS NOT NULL;
+
+-----OR------
+
+SELECT last_name, 'no commission' AS COMM -- 71 rows
+FROM employees
+WHERE commission_pct IS NULL
+UNION
+SELECT last_name, CONVERT(VARCHAR, commission_pct) AS COMM -- 35 rows
+FROM employees
+WHERE commission_pct IS NOT NULL
+
+----OR Using a Case/Else statement--------
+SELECT last_name, commission_pct,
+(CASE WHEN commission_pct IS NULL THEN 'no commission'
+	ELSE CONVERT(VARCHAR, commission_pct) END) AS COMM 
 FROM employees;
-
-
-
 
 
 
@@ -419,12 +441,40 @@ FROM employees e, departments d
 WHERE e.department_id = d.department_id
 AND e.department_id =80;
 
----27.) Write a query to display the employeeís last name, department name, location ID, and city of all employees who earn a commission.
+
+
+SELECT DISTINCT job_id, dep.department_id, location_id
+FROM employees AS emp
+JOIN departments AS dep
+ON emp.department_id = dep.department_id
+WHERE dep.department_id = 80;
+
+---- Joining more than one table----
+SELECT DISTINCT job_id, dep.department_id, dep.location_id, street_address
+FROM employees AS emp
+JOIN departments AS dep
+ON emp.department_id = dep.department_id
+JOIN locations AS loc
+ON dep.location_id = loc.location_id
+WHERE dep.department_id = 80;
+
+
+---27.) Write a query to display the employee‚Äôs last name, department name, location ID, and city of all employees who earn a commission.
 SELECT e.last_name, d.department_name, l.location_id, l.city
 FROM employees e, departments d, locations l
 WHERE e.department_id = d.department_id
 AND d.location_id = l.location_id
 AND e.commission_pct IS NOT NULL;
+
+------OR Using Join-----
+
+SELECT last_name, dep.department_name, loc.location_id, city 
+FROM employees AS emp
+JOIN departments AS dep
+ON emp.department_id = dep.department_id
+JOIN locations AS loc
+ON dep.location_id = loc.location_id
+WHERE commission_pct IS NOT NULL;
 
 ---28.) Create a query to display the name and hire date of any employee hired after employee Davies.
 SELECT e.last_name, e.hire_date
@@ -439,10 +489,12 @@ SELECT e.last_name, e.hire_date
 	ON (davies.last_name = 'Davies')
 	WHERE davies.hire_date < e.hire_date;
 
+
 ---29.) Write an SQL query to show one row twice in results from a table.
-SELECT first_name FROM employees
+SELECT * FROM employees
 	UNION ALL
-SELECT first_name FROM employees ;
+SELECT * FROM employees
+ORDER BY employee_id;
 
 
 ---30.) Display the highest, lowest, sum, and average salary of all employees. Label the columns Maximum, Minimum, Sum, and Average, respectively. Round your results to the nearest whole number.
@@ -452,5 +504,64 @@ ROUND(AVG(salary),0) 'Average',
 ROUND(SUM(salary),0) 'Sum'
 FROM employees;
 
+---31.) Write an SQL query to show the top n (say 10) records of a table.
+SELECT TOP 10 * FROM employees; 
+
+---32.) Display the MINIMUN, MAXIMUM, SUM AND AVERAGE salary of each job type. 
+SELECT job_id, MIN(salary) AS MINIMUM, MAX(salary) AS MAXIMUM, AVG(salary)  AS AVERAGE, 
+SUM(salary) AS TOTAL 
+FROM employees
+GROUP BY job_id;
+
+SELECT job_id, ROUND(MAX(salary),0) "Maximum",
+ROUND(MIN(salary),0) "Minimum",
+ROUND(SUM(salary),0) "Sum",
+ROUND(AVG(salary),0) "Average"
+FROM employees
+GROUP BY job_id;
+
+---33.) Display all the employees and their managers from the employees‚Äô table.
+SELECT E.first_name AS "Employee Name",
+   M.first_name AS "Manager"
+    FROM employees E 
+      LEFT OUTER JOIN employees M
+       ON E.manager_id = M.employee_id;
+
+------OR-------JOIN
+
+SELECT emp.employee_id, emp.first_name AS emp_first_name, emp.last_name As emp_last_name,
+emp.manager_id, man.first_name As man_first_name, man.last_name AS man_last_name
+FROM employees AS emp
+JOIN employees AS man
+ON emp.manager_id = man.employee_id;
 
 
+-----OR------ LEFT JOIN
+
+SELECT emp.employee_id, emp.first_name AS emp_first_name, emp.last_name As emp_last_name,
+emp.manager_id, man.first_name As man_first_name, man.last_name AS man_last_name
+FROM employees AS emp
+LEFT JOIN employees AS man
+ON emp.manager_id = man.employee_id;
+
+
+---34.) Determine the number of managers without listing them. Label the column NUMBER of managers. Hint: use manager_id column to determine the number of managers.
+SELECT COUNT(DISTINCT manager_id) "Number of Managers"
+FROM employees;
+
+---35.) Write a query that displays the difference between the HIGHEST AND LOWEST salaries. Label the column DIFFERENCE.
+SELECT MAX(salary) - MIN(salary) DIFFERENCE
+FROM employees;
+
+---36.) Display the sum salary of all employees in each department.
+SELECT SUM(salary) FROM employees;
+
+SELECT department_id, SUM(salary)
+FROM employees
+GROUP BY department_id;
+
+
+SELECT e.department_id, department_name, SUM(salary)
+FROM employees e
+INNER JOIN departments d ON d.department_id = e.department_id
+GROUP BY e.department_id;
