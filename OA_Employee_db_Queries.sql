@@ -556,12 +556,148 @@ FROM employees;
 ---36.) Display the sum salary of all employees in each department.
 SELECT SUM(salary) FROM employees;
 
-SELECT department_id, SUM(salary)
+SELECT department_id, SUM(salary) AS sum_of_salary
 FROM employees
-GROUP BY department_id;
+GROUP BY department_id
+ORDER BY SUM(Salary) DESC;
+
+---37.) Write a query to display each department's name, location, number of employees, and the average salary of employees in the department. Label the column NAME, LOCATION, NUMBER OF PEOPLE, respectively.
+
+SELECT department_name AS "NAME", location_id AS "LOCATION",
+COUNT(employee_id) AS "NUMBER OF PEOPLE", AVG(salary) AS "AVERAGE SALARY"
+FROM departments AS d
+INNER JOIN employees AS e 
+ON d.department_id = e.department_id
+GROUP BY d.department_name, d.location_id; 
 
 
-SELECT e.department_id, department_name, SUM(salary)
+---38.) Write an SQL query to find the position of the alphabet (‘J’) in the first name column ‘Julia’ from employee’s table.
+SELECT CHARINDEX('J',FIRST_NAME, 0) AS POSITION, FIRST_NAME
+FROM EMPLOYEES
+WHERE FIRST_NAME = 'JULIA';
+
+
+---39.) Create a query to display the employee number and last name of all employees who earns more than the average salary. Sort the result in ascending order of salary.
+SELECT AVG(salary) FROM employees;
+
+SELECT employee_id, last_name, salary
+FROM employees
+WHERE salary >(SELECT AVG(salary)
+FROM employees)
+ORDER BY salary;
+
+
+---40.) Write a query that displays the employee number and last names of all employees who work in a department with any employees whose last name contains a letter U.
+SELECT employee_id, last_name
+FROM employees
+WHERE department_id IN (SELECT department_id
+FROM employees
+WHERE last_name LIKE '%U%')
+ORDER BY department_id;
+
+
+---41.) Display the last name, department number and job id of all employees whose department location ID is 1700.
+SELECT last_name, department_id, job_id
+FROM employees
+WHERE department_id IN (SELECT department_id
+FROM departments
+WHERE location_id =1700);
+
+---42.) Display the last name and salary of every employee who reports to king.
+SELECT first_name, last_name, employee_id
+FROM employees
+WHERE first_name = 'king' OR last_name ='king';
+
+SELECT last_name, salary
+FROM employees
+WHERE manager_id = (SELECT manager_id
+FROM employees
+WHERE last_name = 'King');
+
+SELECT last_name, salary
+FROM employees
+WHERE manager_id = (SELECT employee_id
+FROM employees
+WHERE last_name = 'King');
+
+
+---43.) Display the department number, last name, job ID of every employee in Executive department.---
+
+
+---44.) Display all last name, their department name and id from employees and department tables.---
+SELECT employee_id, last_name, department_name
 FROM employees e
-INNER JOIN departments d ON d.department_id = e.department_id
-GROUP BY e.department_id;
+LEFT JOIN departments d
+ON e.department_id = d.department_id
+WHERE last_name IS NOT NULL;
+	
+
+---45.) Display all the last name department name, id and location from employees, department, and locations tables.---
+SELECT last_name, department_name, e.department_id, d.location_id
+FROM employees AS e
+LEFT JOIN departments AS d
+ON e.department_id = d.department_id
+LEFT JOIN locations AS l
+ON d.location_id = l.location_id;
+
+
+---46.) Write an SQL query to print all employee details from the employees table order by DEPARTMENT Descending.---
+SELECT * 
+FROM employees 
+ORDER BY department_id DESC;
+
+---47.) Write a query to determine who earns more than Mr. Tobias:---
+SELECT first_name, last_name, salary
+FROM employees
+WHERE salary >(SELECT salary 
+FROM employees
+WHERE last_name ='Tobias');
+
+---48.) Write a query to determine who earns more than Mr. Taylor:---
+SELECT first_name, last_name FROM employees
+WHERE first_name = 'Taylor' OR last_name ='Taylor';
+
+SELECT first_name, last_name, salary
+FROM employees
+WHERE salary >(SELECT MAX (salary)
+FROM employees
+WHERE last_name ='Taylor');
+
+
+---49.) Find the job with the highest average salary.---
+SELECT TOP 1 job_id, AVG(salary) AS Highest_Salary
+FROM employees
+GROUP BY job_id
+ORDER BY Highest_Salary DESC;
+
+-----OR------
+WITH avg_salaries as (SELECT avg(salary) AS avg_job_salary 
+FROM employees GROUP BY job_id)
+SELECT cast(max(avg_job_salary) AS int) AS highest_avg_salary 
+FROM avg_salaries;
+
+---50.) Find the employees that make more than Taylor and are in department 80.---
+
+SELECT first_name, last_name, salary, department_id
+FROM employees
+WHERE salary >(SELECT MAX(salary)
+FROM employees
+WHERE last_name ='Taylor') AND department_id =80; 
+
+-----OR--------
+SELECT *
+FROM employees
+WHERE salary >(SELECT MAX(salary)
+FROM employees
+WHERE last_name ='Taylor') AND department_id =80; 
+
+--51.) Display all department names and their full street address.
+SELECT department_name, street_address
+FROM departments AS d
+LEFT JOIN locations AS l
+on d.location_id =l.location_id;
+
+---52.) Write a query to display the number of people with the same job.
+SELECT job_id, COUNT(*) AS no_of_people
+FROM employees
+GROUP BY job_id;
