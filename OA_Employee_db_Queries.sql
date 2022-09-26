@@ -622,6 +622,11 @@ WHERE last_name = 'King');
 
 
 ---43.) Display the department number, last name, job ID of every employee in Executive department.---
+SELECT department_id, last_name, job_id
+FROM employees
+WHERE department_id IN (SELECT department_id
+FROM departments
+WHERE department_name = 'Executive')
 
 
 ---44.) Display all last name, their department name and id from employees and department tables.---
