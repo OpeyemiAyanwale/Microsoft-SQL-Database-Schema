@@ -706,3 +706,190 @@ on d.location_id =l.location_id;
 SELECT job_id, COUNT(*) AS no_of_people
 FROM employees
 GROUP BY job_id;
+
+---53.) Write an SQL query to fetch “FIRST_NAME” from employees table in upper case.
+SELECT UPPER(first_name) AS first_name
+FROM employees;
+
+---54.) Display the full name and salary of the employee that makes the most in departments 50 and 80.
+SELECT first_name, last_name, salary, department_id
+FROM employees
+WHERE salary >(SELECT MAX(salary)
+FROM employees
+WHERE department_id IN (50, 80));
+
+---55.) Display the department names for the departments 10, 20 and 30.
+SELECT department_name, department_id
+FROM departments
+WHERE department_id IN(10, 20, 30);
+
+
+---56.) Display all the manager id and department names of all the departments in United Kingdom (UK).
+SELECT manager_id, department_id
+FROM departments
+WHERE department_id IN (SELECT department_id
+FROM departments 
+WHERE location_id IN (SELECT location_id
+FROM locations
+WHERE country_id = (SELECT country_id
+FROM COUNTRIES 
+WHERE country_name = 'United Kingdom')));
+
+---OR---
+WITH CTE AS
+(SELECT e.manager_id, department_name
+FROM employees e
+LEFT JOIN departments d
+ON e.department_id = d.department_id
+LEFT JOIN locations l
+ON d.location_id = l.location_id
+LEFT JOIN countries c
+ON l.country_id = c.country_id
+WHERE e.department_id IN (SELECT department_id
+FROM departments WHERE location_id IN (SELECT location_id
+FROM locations WHERE country_id = (SELECT country_id
+FROM COUNTRIES WHERE country_name = 'United Kingdom'))))
+SELECT DISTINCT CTE.manager_id, department_name
+FROM CTE;
+
+
+---57.) Display the full name and phone numbers of all employees who are not in location id 1700. 
+SELECT CONCAT(first_name, ' ', last_name) AS FULL_NAME, phone_number
+FROM employees
+WHERE department_id IN (SELECT department_id FROM departments 
+WHERE location_id <> '1700')
+ORDER BY 1 ASC;
+
+---OR----
+SELECT CONCAT(first_name, ' ', last_name) AS FULL_NAME, phone_number
+FROM employees e
+LEFT JOIN department d
+ON e.department_id = d.department_id
+WHERE e.department_id IS NOT NULL
+EXCEPT
+SELECT CONCAT(first_name, ' ', last_name) AS FULL_NAME, phone_number
+FROM employees e
+LEFT JOIN departments d
+ON e.department_id = d.department_id
+WHERE e.department_id IN (SELECT department_id FROM departments WHERE location_id = '1700');
+
+
+--58.) Display the full name, department name and hire date of all employees that were hired after Shelli Baida.
+SELECT e.first_name, e.last_name, e.hire_date 
+	FROM employees e, employees Shelli
+		WHERE Shelli.first_name = 'Shelli'
+		AND Shelli.hire_date < e.hire_date;
+	
+	
+---59.) Display the full name and salary of all employees who make the same salary as Janette King.
+SELECT CONCAT(first_name, ' ', last_name) AS FULL_NAME, salary
+FROM employees
+WHERE salary = (SELECT salary FROM employees WHERE first_name = 'Janette' and last_name = 'King');
+
+
+---60.) Display the full name hire date and salary of all employees who were hired in 2007 and make more than Elizabeth Bates.
+SELECT CONCAT(First_name, ' ', last_name) AS FULL_NAME, hire_date, salary
+FROM employees
+WHERE YEAR(hire_date) = (2007)
+AND salary > (SELECT salary FROM employees WHERE first_name = 'Elizabeth' and last_name = 'Bates');
+
+
+---61.) Issue a query to display all departments whose average salary is greater than $8000. 
+SELECT *
+  FROM departments
+  WHERE department_id IN (SELECT department_id
+        FROM employees
+        GROUP BY department_id
+        HAVING AVG(salary) >= 8000);
+
+---62.) Issue a query to display all departments whose maximum salary is greater than 10000.
+SELECT department_id, salary
+FROM employees
+WHERE salary > 10000
+
+---63) Issue a query to display the job title and total monthly salary for each job that has a total salary exceeding $13,000. Exclude any job title that looks like rep and sort the result by total monthly salary.
+SELECT emp.job_id, job_title, SUM(salary) AS monthly_sal
+FROM employees AS emp
+JOIN jobs
+ON emp.job_id = jobs.job_id
+GROUP BY emp.job_id, job_title
+HAVING SUM(salary) > 13000 AND job_title NOT LIKE ('%rep%')
+ORDER BY SUM(salary) DESC;
+
+---64.) Issue a query to display the department id, department name, location id and city of departments 20 and 50.
+SELECT department_id, department_name, d.location_id, city
+FROM departments d, locations
+WHERE d.department_id IN (20, 50)
+
+---65.) Issue a query to display the city and department name that are having a location id of 1400.
+SELECT * FROM Locations
+
+SELECT CITY, DEPARTMENT_NAME, D.LOCATION_ID, CITY
+FROM LOCATIONS L
+LEFT JOIN departments D ON L.location_id = D.location_id
+WHERE L.location_id IN (1400)
+
+
+---66.) Display the salary of last name, job id and salary of all employees whose salary is equal to the minimum salary.
+SELECT * FROM jobs;
+
+SELECT last_name, job_id, salary
+FROM employees e
+WHERE e.salary = (SELECT min_salary
+FROM jobs j
+WHERE e.job_id = j.job_id);
+
+---67.) Display the departments who have a minimum salary greater that of department 50.
+SELECT department_id, salary
+FROM employees
+WHERE salary >  (SELECT MIN(salary) 
+FROM employees
+WHERE department_id = 50);
+
+---OR
+
+SELECT salary, department_id 
+ FROM employees
+  WHERE salary < ALL
+     (SELECT salary 
+       FROM employees 
+         WHERE department_id = 50);
+
+---68.) Issue a query to display all employees who make more than Timothy Gates and less than Harrison Bloom.
+SELECT * 
+FROM EMPLOYEES
+WHERE SALARY > (SELECT SALARY FROM EMPLOYEES WHERE FIRST_NAME = 'Timothy' and LAST_NAME = 'Gates')
+AND SALARY < (SELECT SALARY FROM EMPLOYEES WHERE FIRST_NAME = 'Harrison' and LAST_NAME = 'Bloom');
+
+---69.) Issue a query to display all employees who are in Lindsey Smith or Joshua Patel department, who make more than Ismael Sciarra and were hired in 2007 and 2008.
+SELECT *
+FROM EMPLOYEES
+WHERE department_id IN ((SELECT department_id FROM employees WHERE FIRST_NAME = 'Lindsey' and LAST_NAME = 'Smith'),
+						(SELECT department_id FROM employees WHERE FIRST_NAME = 'Joshua' and LAST_NAME = 'Patel'))
+AND
+SALARY > (SELECT SALARY FROM employees WHERE FIRST_NAME = 'Ismael' and LAST_NAME = 'Sciarra')
+AND 
+HIRE_DATE IN (SELECT HIRE_DATE FROM EMPLOYEES WHERE YEAR(HIRE_DATE) IN ('2007', '2008'));
+
+---70.) Issue a query to display the full name, 10-digit phone number, salary, department name, street address, postal code, city, and state province of all employees.
+SELECT CONCAT(FIRST_NAME,' ', LAST_NAME) AS FULL_NAME, PHONE_NUMBER, SALARY, DEPARTMENT_NAME, STREET_ADDRESS, POSTAL_CODE, CITY, STATE_PROVINCE
+FROM EMPLOYEES E
+LEFT JOIN departments D
+ON E.department_id = D.department_id
+LEFT JOIN LOCATIONS L
+ON D.location_id = L.location_id;
+
+---71.) Write an SQL query that fetches the unique values of DEPARTMENT from employees table and prints its length.
+SELECT DISTINCT(LEN(department_id))
+FROM employees;
+
+
+WITH DEPT_NAME AS (SELECT DEPARTMENT_NAME FROM EMPLOYEES EMP
+					LEFT JOIN DEPARTMENTS DEP
+					ON EMP.DEPARTMENT_ID = DEP.DEPARTMENT_ID)
+SELECT DISTINCT DEPARTMENT_NAME AS DIS_NAME, LEN(department_name) AS LENGHT_OF_DEPARTMENT FROM DEPT_NAME;
+
+---72.) Write an SQL query to print all employee details from the Worker table order by FIRST_NAME Ascending.
+SELECT * 
+FROM employees 
+ORDER BY first_name ASC;
